@@ -4,6 +4,7 @@ import { useSfx } from '../game/useSfx'
 import { overlapRatio, scoreFor, nearnessFor } from '../game/scoring'
 import { CAT_PATH, CAT_VIEWBOX } from '../game/catPath'
 import { useI18n, LANGS } from '../i18n'
+import { trackEvent } from '../analytics'
 
 // public/ 資源用 BASE_URL 前綴，子路徑部署（GitHub Pages /cat-shot/）才不會 404
 const asset = (p: string) => `${import.meta.env.BASE_URL}${p}`
@@ -120,6 +121,18 @@ export default function Play() {
   const playCut = useSfx(asset('cut.mp3')) // 扣血音效
   const playSave = useSfx(asset('save.mp3')) // 補血音效
   const shakeRef = useRef<HTMLDivElement>(null)
+
+  // 開始 / 再玩一次：送 GA 事件 + 開始遊戲
+  const handleStart = useCallback(() => {
+    trackEvent('game_start')
+    start()
+  }, [start])
+
+  // Game Over：送 GA 事件（帶最終分數與關卡）
+  useEffect(() => {
+    if (state.phase !== 'gameover') return
+    trackEvent('game_over', { score: state.score, level: state.level })
+  }, [state.phase, state.score, state.level])
 
   // 補血時：播放補血音效（綠光由 healId 驅動畫面）
   useEffect(() => {
@@ -352,7 +365,7 @@ export default function Play() {
           {/* 按鈕 */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
             <button
-              onClick={start}
+              onClick={handleStart}
               className="w-44 rounded-xl bg-white py-3 text-lg font-semibold text-slate-900 active:scale-95"
             >
               {t.start}

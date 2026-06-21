@@ -30,6 +30,9 @@ jobs:
       # workspaces monorepo：root 一個 lockfile，npm ci 裝全部後只 build 前端
       - run: npm ci
       - run: npm run build -w client
+        env:
+          # 在 repo Settings → Secrets and variables → Actions 新增 VITE_GA_ID（GA4 評估 ID）
+          VITE_GA_ID: ${{ secrets.VITE_GA_ID }}
 
       # GitHub Pages 對未知路徑不會 fallback，複製一份 404.html 讓任何路徑重整都回到 app
       - run: cp client/dist/index.html client/dist/404.html
