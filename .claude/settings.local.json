@@ -43,7 +43,10 @@
       "Bash(curl -s --max-time 15 https://hispanic-cambridge-replaced-hrs.trycloudflare.com/)",
       "Bash(git rm *)",
       "WebFetch(domain:tw.news.yahoo.com)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"vite /: $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/\\)\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/cat.webp)",
+      "Bash(echo \"asset /cat.webp: $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/cat.webp\\)\")"
     ]
   },
   "statusLine": {

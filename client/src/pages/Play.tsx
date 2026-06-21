@@ -5,7 +5,9 @@ import { overlapRatio, scoreFor, nearnessFor } from '../game/scoring'
 import { CAT_PATH, CAT_VIEWBOX } from '../game/catPath'
 import { useI18n, LANGS } from '../i18n'
 
-const CAT_SRC = '/cat.webp'
+// public/ 資源用 BASE_URL 前綴，子路徑部署（GitHub Pages /cat-shot/）才不會 404
+const asset = (p: string) => `${import.meta.env.BASE_URL}${p}`
+const CAT_SRC = asset('cat.webp')
 
 const FRAME_STROKE = 'rgb(203 213 225)' // slate-300，固定灰色虛線
 const FRAME_FILL = 'rgb(134 239 172)' // green-300，貼合時的背景綠光
@@ -114,9 +116,9 @@ export default function Play() {
   const { state, start, shoot, reset } = useGame()
   const { t, lang, setLang } = useI18n()
   const [showAbout, setShowAbout] = useState(false)
-  const playShutter = useSfx('/camera2.mp3') // 低延遲 Web Audio 音效
-  const playCut = useSfx('/cut.mp3') // 扣血音效
-  const playSave = useSfx('/save.mp3') // 補血音效
+  const playShutter = useSfx(asset('camera2.mp3')) // 低延遲 Web Audio 音效
+  const playCut = useSfx(asset('cut.mp3')) // 扣血音效
+  const playSave = useSfx(asset('save.mp3')) // 補血音效
   const shakeRef = useRef<HTMLDivElement>(null)
 
   // 補血時：播放補血音效（綠光由 healId 驅動畫面）
