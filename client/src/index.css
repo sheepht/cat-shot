@@ -1,3 +1,67 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 評價文字：快速出現、往上飄、淡出（translateX(-50%) 維持水平置中）*/
+@keyframes score-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.8);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -30px) scale(1);
+  }
+}
+
+/* 補血：背景綠光浮現再淡出 */
+@keyframes heal-glow {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 拍照成功：中央框原地淡出（只動 opacity，不縮放 → 不會看起來像在抖）*/
+@keyframes frame-pop {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+/* 主選單背景：貓沿對角線（左上→右下）無限滑過 */
+@keyframes cat-drift {
+  from {
+    transform: translate(-62vmin, -62vmin);
+  }
+  to {
+    transform: translate(62vmin, 62vmin);
+  }
+}
+
+/* 相機快門閃光：快速一閃淡灰光。只動 opacity → 走 GPU 合成、手機不頓 */
+@keyframes shutter-flash {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
