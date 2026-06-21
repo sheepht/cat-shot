@@ -1,0 +1,23 @@
+# 在 Mac（host）終端執行：docker compose up -d postgres
+# devcontainer 內透過 host.docker.internal:5432 連到這個資料庫
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cat-shot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cat_shot
+    ports:
+      - "5435:5432"
+    volumes:
+      - cat-shot-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cat_shot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cat-shot-pgdata:

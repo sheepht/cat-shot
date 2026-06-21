@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(docker -v)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m ' *)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /workspaces/cat-shot/.claude/statusline-command.sh"
+  }
+}
