@@ -3,6 +3,7 @@ import { useGame, MAX_LIVES } from '../game/useGame'
 import { useSfx } from '../game/useSfx'
 import { overlapRatio, scoreFor, nearnessFor } from '../game/scoring'
 import { CAT_PATH, CAT_VIEWBOX } from '../game/catPath'
+import { useI18n, LANGS } from '../i18n'
 
 const CAT_SRC = '/cat.webp'
 
@@ -111,6 +112,7 @@ function rectStyle(r: { x: number; y: number; w: number; h: number }) {
 
 export default function Play() {
   const { state, start, shoot, reset } = useGame()
+  const { t, lang, setLang } = useI18n()
   const [showAbout, setShowAbout] = useState(false)
   const playShutter = useSfx('/camera2.mp3') // 低延遲 Web Audio 音效
   const playCut = useSfx('/cut.mp3') // 扣血音效
@@ -160,8 +162,11 @@ export default function Play() {
   }, [shutter])
 
   const playing = state.phase === 'playing'
-  // 貼合度（每幀更新）→ 框底背景越貼合越綠，用跟計分同一個嚴謹區間
-  const nearness = playing ? nearnessFor(overlapRatio(state.object, state.frame)) : 0
+  // 貼合度（每幀更新）→ 框底背景越貼合越綠；等待空檔沒有貓時歸零
+  const nearness =
+    playing && !state.waiting
+      ? nearnessFor(overlapRatio(state.object, state.frame))
+      : 0
 
   return (
     <div
@@ -218,8 +223,8 @@ export default function Play() {
           </div>
         )}
 
-        {/* 移動的跌倒貓 */}
-        {playing && (
+        {/* 移動的跌倒貓（等待空檔不畫）*/}
+        {playing && !state.waiting && (
           <img
             src={CAT_SRC}
             alt="跌倒貓"
@@ -265,11 +270,11 @@ export default function Play() {
               Lv <RollingNumber value={state.level} />
             </span>
             <span className="flex items-center gap-1">
-              分數 <RollingNumber value={state.score} />
+              {t.score} <RollingNumber value={state.score} />
             </span>
             <span
               className="flex items-center gap-1"
-              aria-label={`生命 ${state.lives}/${MAX_LIVES}`}
+              aria-label={`${t.lives} ${state.lives}/${MAX_LIVES}`}
             >
               {Array.from({ length: MAX_LIVES }, (_, i) => {
                 const filled = i < state.lives
@@ -348,14 +353,31 @@ export default function Play() {
               onClick={start}
               className="w-44 rounded-xl bg-white py-3 text-lg font-semibold text-slate-900 active:scale-95"
             >
-              開始
+              {t.start}
             </button>
             <button
               onClick={() => setShowAbout(true)}
               className="text-lg text-slate-300 hover:text-white"
             >
-              關於
+              {t.about}
             </button>
+          </div>
+          {/* 語言切換：預設跟瀏覽器語系，這裡可手動改 */}
+          <div className="absolute inset-x-0 bottom-6 flex max-h-[26vh] flex-wrap items-center justify-center gap-2 overflow-y-auto px-8">
+            {LANGS.map(({ code, label }) => (
+              <button
+                key={code}
+                onClick={() => setLang(code)}
+                aria-pressed={lang === code}
+                className={`rounded-full px-3 py-1 text-sm transition-colors ${
+                  lang === code
+                    ? 'bg-white font-semibold text-slate-900'
+                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -363,34 +385,38 @@ export default function Play() {
       {/* Game Over */}
       {state.phase === 'gameover' && (
         <Overlay>
-          <h2 className="text-2xl font-bold text-rose-400">Game Over</h2>
-          <p className="font-mono text-lg">最終分數 {state.score.toLocaleString('en-US')}</p>
-          <p className="text-sm text-slate-300">撐到 Level {state.level}</p>
+          <h2 className="text-2xl font-bold text-rose-400">{t.gameOver}</h2>
+          <p className="font-mono text-lg">
+            {t.finalScore} {state.score.toLocaleString('en-US')}
+          </p>
+          <p className="text-sm text-slate-300">{t.reachedLevel(state.level)}</p>
           <button
             onClick={start}
             className="w-44 rounded-xl bg-white py-3 text-lg font-semibold text-slate-900 active:scale-95"
           >
-            再玩一次
+            {t.playAgain}
           </button>
           <button
             onClick={reset}
             className="text-sm text-slate-400 hover:text-white"
           >
-            回選單
+            {t.backToMenu}
           </button>
         </Overlay>
       )}
 
-      {/* 關於 placeholder */}
+      {/* 關於 */}
       {showAbout && (
         <Overlay>
-          <h2 className="text-xl font-bold">關於</h2>
-          <p className="text-center text-sm text-slate-300">（內容之後做）</p>
+          <h2 className="text-xl font-bold">{t.aboutTitle}</h2>
+          <p className="max-w-sm text-left text-sm leading-relaxed text-slate-300">
+            {t.aboutBody}
+          </p>
           <button
             onClick={() => setShowAbout(false)}
             className="w-44 rounded-xl bg-slate-600 py-3 font-semibold active:scale-95"
           >
-            返回
+            {t.back}
           </button>
         </Overlay>
       )}

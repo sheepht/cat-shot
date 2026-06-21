@@ -1,0 +1,14 @@
+{
+  "score": "Pontos",
+  "lives": "Vidas",
+  "start": "Começar",
+  "about": "Sobre",
+  "aboutTitle": "Sobre este gato",
+  "aboutBody": "Este gato veio de uma foto que viralizou no Japão: uma vovó saiu pela floresta para fotografar a paisagem e, sem querer, capturou um gato rajado deitado de barriga para cima na terra, encarando o céu com cara de espanto. O pessoal brincou que era um «emoji de tombo» na vida real, tão artístico que «não destoaria no Louvre». Achamos esse instante da queda bonito demais para não guardar — então criamos este jogo, para você mesmo capturar cada tombo perfeito.",
+  "back": "Voltar",
+  "gameOver": "Game Over",
+  "finalScore": "Pontuação final",
+  "reachedLevel": "Chegou ao nível {n}",
+  "playAgain": "Jogar de novo",
+  "backToMenu": "Menu"
+}

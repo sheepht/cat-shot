@@ -1,0 +1,14 @@
+{
+  "score": "Puntos",
+  "lives": "Vidas",
+  "start": "Empezar",
+  "about": "Acerca de",
+  "aboutTitle": "Sobre este gato",
+  "aboutBody": "Este gato nació de una foto que se volvió viral en Japón: una abuela salió al bosque para fotografiar el paisaje y, sin querer, captó a un gato atigrado tumbado panza arriba sobre la tierra, mirando al cielo con cara de desconcierto. La gente bromeó diciendo que era un «emoji de tropezón» en la vida real, tan artístico que «no desentonaría en el Louvre». Nos pareció que ese instante de caída era demasiado bonito como para no guardarlo, así que hicimos este juego para que captures tú mismo cada caída perfecta.",
+  "back": "Volver",
+  "gameOver": "Game Over",
+  "finalScore": "Puntuación final",
+  "reachedLevel": "Llegaste al nivel {n}",
+  "playAgain": "Jugar de nuevo",
+  "backToMenu": "Menú"
+}

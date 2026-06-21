@@ -41,7 +41,9 @@
       "Bash(echo \"started pid $!\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 15 https://hispanic-cambridge-replaced-hrs.trycloudflare.com/)",
       "Bash(curl -s --max-time 15 https://hispanic-cambridge-replaced-hrs.trycloudflare.com/)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "WebFetch(domain:tw.news.yahoo.com)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   },
   "statusLine": {
