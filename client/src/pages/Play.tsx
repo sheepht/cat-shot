@@ -3,7 +3,7 @@ import { useGame, MAX_LIVES } from '../game/useGame'
 import { useSfx } from '../game/useSfx'
 import { overlapRatio, scoreFor, nearnessFor } from '../game/scoring'
 import { CAT_PATH, CAT_VIEWBOX } from '../game/catPath'
-import { useI18n, LANGS } from '../i18n'
+import { useI18n, LANGS, type Lang } from '../i18n'
 import { trackEvent } from '../analytics'
 
 // public/ 資源用 BASE_URL 前綴，子路徑部署（GitHub Pages /cat-shot/）才不會 404
@@ -128,11 +128,35 @@ export default function Play() {
     start()
   }, [start])
 
+  // 切語言：送 GA 事件（看玩家實際偏好哪些語系）+ 切換
+  const handleLang = useCallback(
+    (code: Lang) => {
+      trackEvent('language_select', { lang: code })
+      setLang(code)
+    },
+    [setLang],
+  )
+
+  // 打開「關於」：送 GA 事件衡量內容互動
+  const handleAbout = useCallback(() => {
+    trackEvent('about_open')
+    setShowAbout(true)
+  }, [])
+
   // Game Over：送 GA 事件（帶最終分數與關卡）
   useEffect(() => {
     if (state.phase !== 'gameover') return
     trackEvent('game_over', { score: state.score, level: state.level })
   }, [state.phase, state.score, state.level])
+
+  // 升級：關卡往上跳時送 GA 事件（看玩家撐到第幾關，衡量難度曲線）
+  const prevLevel = useRef(state.level)
+  useEffect(() => {
+    if (state.phase === 'playing' && state.level > prevLevel.current) {
+      trackEvent('level_up', { level: state.level })
+    }
+    prevLevel.current = state.level
+  }, [state.phase, state.level])
 
   // 補血時：播放補血音效（綠光由 healId 驅動畫面）
   useEffect(() => {
@@ -371,7 +395,7 @@ export default function Play() {
               {t.start}
             </button>
             <button
-              onClick={() => setShowAbout(true)}
+              onClick={handleAbout}
               className="text-lg text-slate-300 hover:text-white"
             >
               {t.about}
@@ -382,7 +406,7 @@ export default function Play() {
             {LANGS.map(({ code, label }) => (
               <button
                 key={code}
-                onClick={() => setLang(code)}
+                onClick={() => handleLang(code)}
                 aria-pressed={lang === code}
                 className={`rounded-full px-3 py-1 text-sm transition-colors ${
                   lang === code
@@ -406,7 +430,7 @@ export default function Play() {
           </p>
           <p className="text-sm text-slate-300">{t.reachedLevel(state.level)}</p>
           <button
-            onClick={start}
+            onClick={handleStart}
             className="w-44 rounded-xl bg-white py-3 text-lg font-semibold text-slate-900 active:scale-95"
           >
             {t.playAgain}

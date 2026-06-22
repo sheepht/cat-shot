@@ -47,7 +47,12 @@
       "Bash(echo \"vite /: $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/\\)\")",
       "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/cat.webp)",
       "Bash(echo \"asset /cat.webp: $\\(curl -s -o /dev/null -w '%{http_code}' http://localhost:5173/cat.webp\\)\")",
-      "Bash(node -e \"console.log\\(require\\('./client/node_modules/react-ga4/package.json'\\).version\\)\")"
+      "Bash(node -e \"console.log\\(require\\('./client/node_modules/react-ga4/package.json'\\).version\\)\")",
+      "Bash(npx prisma *)",
+      "Bash(grep -rn \"VITE_GA_ID\\\\|GA_ID\\\\|react-ga4\\\\|ReactGA\" --include=\"*.ts\" --include=\"*.tsx\" client/src)",
+      "Bash(ls -la client/.env*)",
+      "Bash(ls -la server/.env*)",
+      "Bash(git commit *)"
     ]
   },
   "statusLine": {
