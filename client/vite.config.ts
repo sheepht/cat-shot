@@ -1,10 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig(({ command }) => ({
-  // GitHub Pages 專案頁是 username.github.io/cat-shot/ 子路徑，build 要設 base；
-  // dev 維持根路徑。若 repo 名稱不是 cat-shot，改這裡即可。
-  base: command === 'build' ? '/cat-shot/' : '/',
+export default defineConfig(() => ({
+  // 部署在 custom domain cat-shot.sheepht.com 的根路徑，base 固定為 '/'。
+  base: '/',
   plugins: [react()],
   server: {
     host: true, // 讓同網段手機也能連 dev server

@@ -37,7 +37,13 @@ jobs:
       # GitHub Pages 對未知路徑不會 fallback，複製一份 404.html 讓任何路徑重整都回到 app
       - run: cp client/dist/index.html client/dist/404.html
 
+      # 寫入 CNAME 綁定 custom domain，避免每次 build 後 Pages 設定被產物覆蓋掉
+      - run: echo 'cat-shot.sheepht.com' > client/dist/CNAME
+
+      # enablement: true 讓此 action 自動透過 API 開啟 Pages，免去手動到 Settings 設定
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: client/dist
