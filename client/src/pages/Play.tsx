@@ -158,6 +158,16 @@ export default function Play() {
     prevLevel.current = state.level
   }, [state.phase, state.level])
 
+  // 拍照：每按一次快門送 GA 事件（命中與否 + 分數 + 關卡），看拍照頻率與準度
+  useEffect(() => {
+    if (state.shotId === 0) return
+    trackEvent('photo_taken', {
+      hit: state.lastHit,
+      points: state.lastHit ? scoreFor(state.lastRatio ?? 0) : 0,
+      level: state.level,
+    })
+  }, [state.shotId])
+
   // 補血時：播放補血音效（綠光由 healId 驅動畫面）
   useEffect(() => {
     if (state.healId === 0) return
@@ -402,21 +412,8 @@ export default function Play() {
             </button>
           </div>
           {/* 語言切換：預設跟瀏覽器語系，這裡可手動改 */}
-          <div className="absolute inset-x-0 bottom-6 flex max-h-[26vh] flex-wrap items-center justify-center gap-2 overflow-y-auto px-8">
-            {LANGS.map(({ code, label }) => (
-              <button
-                key={code}
-                onClick={() => handleLang(code)}
-                aria-pressed={lang === code}
-                className={`rounded-full px-3 py-1 text-sm transition-colors ${
-                  lang === code
-                    ? 'bg-white font-semibold text-slate-900'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="absolute inset-x-0 bottom-6 flex items-center justify-center px-8">
+            <LangSelect lang={lang} onSelect={handleLang} />
           </div>
         </div>
       )}
@@ -451,6 +448,17 @@ export default function Play() {
           <p className="max-w-sm text-left text-sm leading-relaxed text-slate-300">
             {t.aboutBody}
           </p>
+          <p className="max-w-sm text-left text-sm leading-relaxed text-slate-400">
+            {t.aboutStudio}{' '}
+            <a
+              href="https://sheepht.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted underline-offset-2 hover:text-slate-200"
+            >
+              sheepht.com
+            </a>
+          </p>
           <button
             onClick={() => setShowAbout(false)}
             className="w-44 rounded-xl bg-slate-600 py-3 font-semibold active:scale-95"
@@ -460,6 +468,81 @@ export default function Play() {
         </Overlay>
       )}
       </div>
+    </div>
+  )
+}
+
+// 主選單的自訂語言下拉：往上展開（按鈕在畫面底部）、可捲動，點外面或按 Esc 關閉。
+// 不用原生 <select> 是為了沿用遊戲深色玻璃質感、並列出母語全名。
+function LangSelect({
+  lang,
+  onSelect,
+}: {
+  lang: Lang
+  onSelect: (code: Lang) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const current = LANGS.find((l) => l.code === lang) ?? LANGS[0]
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex min-w-44 items-center justify-between gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm text-slate-200 hover:bg-white/20"
+      >
+        <span className="font-semibold">{current.name}</span>
+        <span className={`text-xs transition-transform ${open ? 'rotate-180' : ''}`}>
+          ▾
+        </span>
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute bottom-full left-0 right-0 mb-2 max-h-[44vh] overflow-y-auto rounded-xl border border-white/10 bg-slate-800/95 py-1 shadow-xl backdrop-blur"
+        >
+          {LANGS.map(({ code, name }) => (
+            <li key={code}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={lang === code}
+                onClick={() => {
+                  onSelect(code)
+                  setOpen(false)
+                }}
+                className={`block w-full px-4 py-2 text-left text-sm transition-colors ${
+                  lang === code
+                    ? 'bg-white font-semibold text-slate-900'
+                    : 'text-slate-200 hover:bg-white/15'
+                }`}
+              >
+                {name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

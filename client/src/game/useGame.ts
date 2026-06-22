@@ -28,12 +28,11 @@ const OBJ_H = OBJ_W / CAT_ASPECT
 const FRAME_W = OBJ_W
 const FRAME_H = FRAME_W / CAT_ASPECT
 const FRAME: Rect = { x: (1 - FRAME_W) / 2, y: (1 - FRAME_H) / 2, w: FRAME_W, h: FRAME_H } // 中央貓形目標
-const ALIGN_X = FRAME.x // 貓對準框時的 object.x
 
 // 跌倒貓從左上滑到右下：起點在左上角外的對角線上，中心沿 y=x 穿過框中央 (0.5,0.5)
 const START_C = -0.25 // 物體中心起始座標（x=y），在畫面左上角外
 
-const BASE_SPEED = 0.4 // 正規化單位 / 秒（Level 1 約 2.5 秒橫越）
+const BASE_SPEED = 0.5 // 正規化單位 / 秒（Level 1 約 2 秒橫越）
 const SPEED_K = 0.15 // 每升一級的加速幅度
 export const MAX_LIVES = 5 // 滿血命數，血條比例用
 
@@ -50,38 +49,18 @@ const freshObject = (): Rect => ({
 
 // --- 花招 ---
 type Trick =
-  | 'steady' // 等速
-  | 'wave' // 忽快忽慢
-  | 'linger' // 框前放慢
-  | 'brake' // 快到框前急停一下
-  | 'rush' // 穿框前加速
-  | 'dash' // 高速衝刺
-  | 'comeback' // 過框一點就掉頭回去
-  | 'arc' // 往框飛、快到時走半圓繞過，剛好不進框（誘餌）
+  | 'steady' // 等速直線（速度逐關加快）
+  | 'peek' // 從左上角探頭一點點就立刻縮回去（假動作）
+  | 'arc' // 往框飛、快到時走半圓繞過，剛好不進框（誘餌、轉彎）※暫停用
 
 const ARC_R = 0.4 // arc 繞行框中心的半徑（夠大 → 貓不會進到框裡）
+const PEEK_C = -0.05 // peek 探頭到的中心座標（越大露越多；此值約露出 1/3 隻貓）
 
-// 依關卡加權挑花招：前 5 關純直線（只加速），第 6 關起才開始有花招、越高關越花
+// 前 5 關純直線（只加速）；第 6 關起 1/5 機率探頭假動作(peek)，其餘 4/5 仍是直線加速(steady)
+// 轉彎(arc) 暫時停用：把下面的 'peek' 換回 'arc' 即可復原
 function pickTrick(level: number): Trick {
   if (level <= 5) return 'steady'
-  const weighted: [Trick, number][] = [
-    ['steady', Math.max(1, 12 - level)],
-    ['wave', level >= 6 ? 2 : 0],
-    ['linger', level >= 6 ? 1.5 : 0],
-    ['brake', level >= 7 ? 2 : 0],
-    ['arc', level >= 7 ? 2 : 0],
-    ['rush', level >= 8 ? 2 : 0],
-    ['dash', level >= 9 ? 2 : 0],
-    ['comeback', level >= 10 ? 1.5 : 0],
-  ]
-  const total = weighted.reduce((s, [, w]) => s + w, 0)
-  let r = Math.random() * total
-  for (const [t, w] of weighted) {
-    if (w <= 0) continue
-    r -= w
-    if (r <= 0) return t
-  }
-  return 'steady'
+  return Math.random() < 0.2 ? 'peek' : 'steady'
 }
 
 interface Mutable {
@@ -102,8 +81,6 @@ interface Mutable {
   elapsed: number // 這隻貓出現後經過的秒數
   dir: 1 | -1 // 前進 / 倒退
   trick: Trick
-  braked: boolean // brake 是否已急停過
-  brakeLeft: number // 急停剩餘秒數
   inArc: boolean // arc 是否已進入圓弧段
   arcDone: boolean // arc 半圓是否走完
   arcAng: number // arc 目前角度
@@ -127,8 +104,6 @@ const initialMutable = (): Mutable => ({
   elapsed: 0,
   dir: 1,
   trick: 'steady',
-  braked: false,
-  brakeLeft: 0,
   inArc: false,
   arcDone: false,
   arcAng: 0,
@@ -148,8 +123,6 @@ function activate(g: Mutable) {
   g.elapsed = 0
   g.speed = speedFor(g.level)
   g.trick = pickTrick(g.level)
-  g.braked = false
-  g.brakeLeft = 0
   g.inArc = false
   g.arcDone = false
   g.arcAng = 0
@@ -161,46 +134,16 @@ function activate(g: Mutable) {
 function advance(g: Mutable, dt: number) {
   g.elapsed += dt
   const base = g.speed
-  const x = g.object.x
   let v = base
   switch (g.trick) {
     case 'steady':
       v = base
       break
-    case 'wave': {
-      const o = (Math.sin(g.elapsed * 5) + 1) / 2 // 0..1
-      v = base * (0.35 + 1.3 * o)
-      break
-    }
-    case 'linger': {
-      const near = Math.max(0, 1 - Math.abs(x - ALIGN_X) / 0.22)
-      v = base * (1 - 0.72 * near) // 越近框越慢
-      break
-    }
-    case 'rush': {
-      const near = Math.max(0, 1 - Math.abs(x - ALIGN_X) / 0.25)
-      v = base * (1 + 2.2 * near) // 越近框越快
-      break
-    }
-    case 'dash':
-      v = base * 2
-      break
-    case 'brake': {
-      if (g.brakeLeft > 0) {
-        g.brakeLeft -= dt
-        v = 0
-      } else if (!g.braked && x > ALIGN_X - 0.15 && x < ALIGN_X - 0.03) {
-        g.braked = true
-        g.brakeLeft = 0.4 + Math.random() * 0.5 // 快到框前急停一下
-        v = 0
-      } else {
-        v = base
-      }
-      break
-    }
-    case 'comeback': {
-      if (g.dir === 1 && x > ALIGN_X + 0.12) g.dir = -1 // 過框一點就掉頭
-      v = base * 1.15
+    case 'peek': {
+      // 假動作：從左上角探出一點點，立刻掉頭縮回去（永遠不進框）
+      const cx = g.object.x + OBJ_W / 2
+      if (g.dir === 1 && cx > PEEK_C) g.dir = -1
+      v = base
       break
     }
     case 'arc': {

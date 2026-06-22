@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import zh from './locales/zh.json'
+import zhCN from './locales/zh-CN.json'
 import en from './locales/en.json'
 import es from './locales/es.json'
 import hi from './locales/hi.json'
@@ -16,19 +17,20 @@ import ko from './locales/ko.json'
 
 // 大致依使用人口排序；標籤用該語言的母語縮寫
 export const LANGS = [
-  { code: 'en', label: 'EN' },
-  { code: 'zh', label: '中' },
-  { code: 'hi', label: 'हि' },
-  { code: 'es', label: 'ES' },
-  { code: 'ar', label: 'ع' },
-  { code: 'bn', label: 'বা' },
-  { code: 'pt', label: 'PT' },
-  { code: 'ru', label: 'RU' },
-  { code: 'ja', label: '日' },
-  { code: 'fr', label: 'FR' },
-  { code: 'de', label: 'DE' },
-  { code: 'id', label: 'ID' },
-  { code: 'ko', label: '한' },
+  { code: 'en', label: 'EN', name: 'English' },
+  { code: 'zh', label: '繁', name: '繁體中文' },
+  { code: 'zh-CN', label: '简', name: '简体中文' },
+  { code: 'hi', label: 'हि', name: 'हिन्दी' },
+  { code: 'es', label: 'ES', name: 'Español' },
+  { code: 'ar', label: 'ع', name: 'العربية' },
+  { code: 'bn', label: 'বা', name: 'বাংলা' },
+  { code: 'pt', label: 'PT', name: 'Português' },
+  { code: 'ru', label: 'RU', name: 'Русский' },
+  { code: 'ja', label: '日', name: '日本語' },
+  { code: 'fr', label: 'FR', name: 'Français' },
+  { code: 'de', label: 'DE', name: 'Deutsch' },
+  { code: 'id', label: 'ID', name: 'Bahasa Indonesia' },
+  { code: 'ko', label: '한', name: '한국어' },
 ] as const
 
 export type Lang = (typeof LANGS)[number]['code']
@@ -40,7 +42,7 @@ const RTL_LANGS = new Set<Lang>(['ar'])
 export type Messages = typeof zh
 
 const dictionaries: Record<Lang, Messages> = {
-  zh, en, es, hi, ar, bn, pt, ru, ja, fr, de, id, ko,
+  zh, 'zh-CN': zhCN, en, es, hi, ar, bn, pt, ru, ja, fr, de, id, ko,
 }
 
 // 對外的字串包：純字串直接給，含佔位的字串包成函式（JSON 放不了函式）
@@ -63,7 +65,12 @@ function detectLang(): Lang {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored && SUPPORTED.includes(stored)) return stored as Lang
   for (const l of navigator.languages ?? [navigator.language]) {
-    const code = l.toLowerCase().split('-')[0]
+    const lower = l.toLowerCase()
+    // 中文要分繁簡：簡體用於 zh-Hans / 中國 / 新加坡 / 馬來西亞，其餘（台港澳、純 zh）給繁體
+    if (lower.startsWith('zh')) {
+      return /hans|-cn|-sg|-my/.test(lower) ? 'zh-CN' : 'zh'
+    }
+    const code = lower.split('-')[0]
     if (SUPPORTED.includes(code)) return code as Lang
   }
   return 'en'
